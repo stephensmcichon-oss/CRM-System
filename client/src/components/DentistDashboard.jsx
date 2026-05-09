@@ -44,7 +44,7 @@ export default function DentistDashboard({ onLogout }) {
         setTasks(taskData);
         setPatients(patData);
         setLogs(logData.slice(0, 15));
-        setReminderCount(remData.length);
+        setReminderCount(remData.filter(r => r.type === 'Appointment').length);
       } catch (err) {
         console.error('Failed to load dentist dashboard data:', err);
       }
@@ -119,17 +119,32 @@ export default function DentistDashboard({ onLogout }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button 
             className="btn" 
-            style={{ position: 'relative', padding: '0.5rem' }} 
+            style={{ position: 'relative', padding: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-surface-hover)', borderRadius: 'var(--radius-md)' }} 
             onClick={() => setIsRemindersOpen(true)}
           >
-            <Bell size={20} />
+            <Bell size={20} style={{ color: 'var(--text-primary)' }} />
             {reminderCount > 0 && (
-              <span className="badge danger" style={{ position: 'absolute', top: '-5px', right: '-5px', padding: '0.15rem 0.4rem', fontSize: '0.7rem' }}>
+              <span style={{ 
+                position: 'absolute', 
+                top: '-6px', 
+                right: '-6px', 
+                backgroundColor: 'var(--danger)', 
+                color: 'white', 
+                fontSize: '0.7rem', 
+                fontWeight: 700, 
+                width: '20px', 
+                height: '20px', 
+                borderRadius: '50%', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                boxShadow: '0 0 0 2px var(--bg-surface)' 
+              }}>
                 {reminderCount}
               </span>
             )}
           </button>
-          <button className="btn" style={{ padding: '0.5rem', color: 'var(--danger)' }} onClick={onLogout}>
+          <button className="btn" style={{ padding: '0.6rem', color: 'var(--danger)', backgroundColor: 'var(--bg-surface-hover)', borderRadius: 'var(--radius-md)' }} onClick={onLogout}>
             <LogOut size={20} />
           </button>
         </div>
