@@ -62,17 +62,6 @@ let appointments = [
 
 // --- Routes ---
 
-// Authentication
-app.post('/api/auth/login', (req, res) => {
-  const { username, password } = req.body;
-  
-  if (username === 'user' && password === 'user') {
-    res.json({ success: true, sessionToken: `mock_session_token_${Date.now()}` });
-  } else {
-    res.status(401).json({ success: false, message: 'Invalid credentials' });
-  }
-});
-
 // Dashboard Stats
 app.get('/api/stats', (req, res) => {
   res.json({
