@@ -333,6 +333,7 @@ tr:hover td {
 @media (max-width: 768px) {
   .app-container {
     flex-direction: column;
+    padding-bottom: 75px; /* Space for fixed bottom nav */
   }
   
   .sidebar {
@@ -341,23 +342,80 @@ tr:hover td {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    position: static;
+    padding: 0.5rem;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
     border-right: none;
-    border-bottom: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+    background-color: rgba(24, 27, 33, 0.95);
+    backdrop-filter: blur(10px);
+  }
+
+  [data-theme='light'] .sidebar {
+    background-color: rgba(255, 255, 255, 0.95);
+  }
+  
+  .sidebar-logo {
+    display: none; /* Hide logo on mobile bottom nav */
+  }
+
+  .sidebar > div:first-child {
+    flex: 1;
+  }
+
+  .sidebar > div:first-child > .nav-menu {
+    margin-top: 0 !important; /* Override inline margin from React */
   }
   
   .nav-menu {
     flex-direction: row;
-    overflow-x: auto;
+    justify-content: space-around;
+    gap: 0;
   }
   
+  .nav-item {
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    font-size: 0.7rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Make sure logout button doesn't have 100% width on mobile */
+  button.nav-item {
+    width: auto !important;
+    margin-top: 0 !important;
+  }
+
   .main-content {
-    padding: 1.5rem;
+    padding: 1rem;
   }
   
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
   .card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  th, td {
+    white-space: nowrap;
+  }
+  
+  .modal-content {
+    width: 95vw;
+    margin: auto;
   }
 }
 
