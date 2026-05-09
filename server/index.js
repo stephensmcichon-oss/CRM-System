@@ -1,5 +1,7 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -7,131 +9,187 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Mock Data
-let clients = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', phone: '555-0100', status: 'Active' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '555-0101', status: 'Lead' }
-];
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB Atlas'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-let tasks = [
-  { id: 1, title: 'Call John for follow-up', dueDate: '2026-05-10', completed: false },
-  { id: 2, title: 'Send contract to Jane', dueDate: '2026-05-12', completed: false }
-];
-
-let patients = [
-  { 
-    id: 1, 
-    name: 'Alice Walker', 
-    birthDate: '1980-04-12',
-    address: '123 Main St, Springfield',
-    gender: 'Female',
-    phone: '555-0199',
-    email: 'alice@example.com',
-    emergencyContact: 'John Walker (555-0198)',
-    allergies: 'Penicillin',
-    currentMeds: 'Lisinopril',
-    condition: 'Hypertension', 
-    physicianContact: 'Dr. Smith (555-0200)',
-    dentalHistory: [
-      { id: 1, date: '2026-04-20', service: 'Routine cleaning', notes: 'Fillings on #3, #14' }
-    ]
-  },
-  { 
-    id: 2, 
-    name: 'Bob Harris', 
-    birthDate: '1992-11-05',
-    address: '456 Oak Ave, Shelbyville',
-    gender: 'Male',
-    phone: '555-0211',
-    email: 'bob@example.com',
-    emergencyContact: 'Mary Harris (555-0212)',
-    allergies: 'None',
-    currentMeds: 'Albuterol',
-    condition: 'Asthma', 
-    physicianContact: 'Dr. Jones (555-0205)',
-    dentalHistory: [
-      { id: 1, date: '2026-05-01', service: 'Toothache lower right', notes: 'Root canal #30' }
-    ]
+// Schema Transform (replaces _id with id for React frontend)
+const schemaOptions = {
+  toJSON: {
+    transform: function (doc, ret) {
+      ret.id = ret._id;
+      delete ret._id;
+      delete ret.__v;
+    }
   }
-];
+};
 
-let appointments = [
-  { id: 1, patientId: 1, patientName: 'Alice Walker', date: '2026-05-15', time: '10:00 AM', reason: 'Routine Checkup' },
-  { id: 2, patientId: 2, patientName: 'Bob Harris', date: '2026-05-16', time: '02:30 PM', reason: 'Follow-up' }
-];
+// --- Mongoose Models ---
+
+const ClientSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  phone: String,
+  status: String
+}, schemaOptions);
+const Client = mongoose.model('Client', ClientSchema);
+
+const TaskSchema = new mongoose.Schema({
+  title: String,
+  dueDate: String,
+  completed: { type: Boolean, default: false }
+}, schemaOptions);
+const Task = mongoose.model('Task', TaskSchema);
+
+const DentalHistorySchema = new mongoose.Schema({
+  date: String,
+  service: String,
+  notes: String
+}, schemaOptions);
+
+const PatientSchema = new mongoose.Schema({
+  name: String,
+  birthDate: String,
+  address: String,
+  gender: String,
+  phone: String,
+  email: String,
+  emergencyContact: String,
+  allergies: String,
+  currentMeds: String,
+  condition: String,
+  physicianContact: String,
+  dentalHistory: [DentalHistorySchema]
+}, schemaOptions);
+const Patient = mongoose.model('Patient', PatientSchema);
+
+const AppointmentSchema = new mongoose.Schema({
+  patientId: String,
+  patientName: String,
+  date: String,
+  time: String,
+  reason: String
+}, schemaOptions);
+const Appointment = mongoose.model('Appointment', AppointmentSchema);
 
 // --- Routes ---
 
 // Dashboard Stats
-app.get('/api/stats', (req, res) => {
-  res.json({
-    totalClients: clients.length,
-    activeTasks: tasks.filter(t => !t.completed).length,
-    upcomingAppointments: appointments.length
-  });
+app.get('/api/stats', async (req, res) => {
+  try {
+    const totalClients = await Client.countDocuments();
+    const activeTasks = await Task.countDocuments({ completed: false });
+    const upcomingAppointments = await Appointment.countDocuments();
+    
+    res.json({ totalClients, activeTasks, upcomingAppointments });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Clients
-app.get('/api/clients', (req, res) => res.json(clients));
-app.post('/api/clients', (req, res) => {
-  const newClient = { id: Date.now(), ...req.body };
-  clients.push(newClient);
-  res.status(201).json(newClient);
-});
-app.put('/api/clients/:id', (req, res) => {
-  const index = clients.findIndex(c => c.id === parseInt(req.params.id));
-  if (index !== -1) {
-    clients[index] = { ...clients[index], ...req.body };
-    res.json(clients[index]);
-  } else {
-    res.status(404).json({ message: 'Client not found' });
+app.get('/api/clients', async (req, res) => {
+  try {
+    const clients = await Client.find();
+    res.json(clients);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
-app.delete('/api/clients/:id', (req, res) => {
-  clients = clients.filter(c => c.id !== parseInt(req.params.id));
-  res.status(204).send();
+app.post('/api/clients', async (req, res) => {
+  try {
+    const newClient = await Client.create(req.body);
+    res.status(201).json(newClient);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.put('/api/clients/:id', async (req, res) => {
+  try {
+    const updatedClient = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updatedClient);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.delete('/api/clients/:id', async (req, res) => {
+  try {
+    await Client.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Tasks
-app.get('/api/tasks', (req, res) => res.json(tasks));
-app.post('/api/tasks', (req, res) => {
-  const newTask = { id: Date.now(), completed: false, ...req.body };
-  tasks.push(newTask);
-  res.status(201).json(newTask);
+app.get('/api/tasks', async (req, res) => {
+  try {
+    const tasks = await Task.find();
+    res.json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
-app.post('/api/tasks/:id/complete', (req, res) => {
-  const task = tasks.find(t => t.id === parseInt(req.params.id));
-  if (task) {
-    task.completed = true;
+app.post('/api/tasks', async (req, res) => {
+  try {
+    const newTask = await Task.create({ ...req.body, completed: false });
+    res.status(201).json(newTask);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/tasks/:id/complete', async (req, res) => {
+  try {
+    const task = await Task.findByIdAndUpdate(req.params.id, { completed: true }, { new: true });
     res.json(task);
-  } else {
-    res.status(404).json({ message: 'Task not found' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
 // Healthcare - Patients
-app.get('/api/patients', (req, res) => res.json(patients));
-app.post('/api/patients', (req, res) => {
-  const newPatient = { id: Date.now(), ...req.body };
-  patients.push(newPatient);
-  res.status(201).json(newPatient);
+app.get('/api/patients', async (req, res) => {
+  try {
+    const patients = await Patient.find();
+    res.json(patients);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
-app.put('/api/patients/:id', (req, res) => {
-  const index = patients.findIndex(p => p.id === parseInt(req.params.id));
-  if (index !== -1) {
-    patients[index] = { ...patients[index], ...req.body };
-    res.json(patients[index]);
-  } else {
-    res.status(404).json({ message: 'Patient not found' });
+app.post('/api/patients', async (req, res) => {
+  try {
+    const newPatient = await Patient.create(req.body);
+    res.status(201).json(newPatient);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.put('/api/patients/:id', async (req, res) => {
+  try {
+    const updatedPatient = await Patient.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updatedPatient);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
 // Healthcare - Appointments
-app.get('/api/appointments', (req, res) => res.json(appointments));
-app.post('/api/appointments', (req, res) => {
-  const newAppointment = { id: Date.now(), ...req.body };
-  appointments.push(newAppointment);
-  res.status(201).json(newAppointment);
+app.get('/api/appointments', async (req, res) => {
+  try {
+    const appointments = await Appointment.find();
+    res.json(appointments);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post('/api/appointments', async (req, res) => {
+  try {
+    const newAppointment = await Appointment.create(req.body);
+    res.status(201).json(newAppointment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(PORT, () => {
