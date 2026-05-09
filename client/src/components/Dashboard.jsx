@@ -108,6 +108,11 @@ export default function Dashboard() {
               <tr key={task.id}>
                 <td>
                   <div style={{ fontWeight: 500 }}>{task.title}</div>
+                  {task.description && (
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', marginTop: '0.25rem', padding: '0.5rem', backgroundColor: 'var(--bg-base)', borderLeft: '2px solid var(--accent-primary)', borderRadius: '0 4px 4px 0' }}>
+                      {task.description}
+                    </div>
+                  )}
                   {task.comments && task.comments.length > 0 && (
                     <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                       <strong>Comments:</strong>

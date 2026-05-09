@@ -15,7 +15,7 @@ export default function DentistDashboard({ onLogout }) {
 
   // Task Management State
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [taskFormData, setTaskFormData] = useState({ title: '', dueDate: '' });
+  const [taskFormData, setTaskFormData] = useState({ title: '', description: '', dueDate: '' });
   const [editTaskData, setEditTaskData] = useState(null);
   const [activeTaskDropdownId, setActiveTaskDropdownId] = useState(null);
 
@@ -62,7 +62,7 @@ export default function DentistDashboard({ onLogout }) {
     .then(newTask => {
       setTasks([...tasks, newTask]);
       setIsTaskModalOpen(false);
-      setTaskFormData({ title: '', dueDate: '' });
+      setTaskFormData({ title: '', description: '', dueDate: '' });
     })
     .catch(err => console.error(err));
   };
@@ -72,7 +72,7 @@ export default function DentistDashboard({ onLogout }) {
     fetch(`${API_BASE_URL}/api/tasks/${editTaskData.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: editTaskData.title, dueDate: editTaskData.dueDate })
+      body: JSON.stringify({ title: editTaskData.title, description: editTaskData.description, dueDate: editTaskData.dueDate })
     })
     .then(res => res.json())
     .then(updatedTask => {
@@ -202,6 +202,11 @@ export default function DentistDashboard({ onLogout }) {
                       </div>
                     </div>
                     <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Due: {task.dueDate}</div>
+                    {task.description && (
+                      <div style={{ color: 'var(--text-primary)', fontSize: '0.9rem', marginBottom: '0.75rem', padding: '0.5rem', backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 'var(--radius-sm)' }}>
+                        {task.description}
+                      </div>
+                    )}
                     
                     {task.comments && task.comments.length > 0 && (
                       <div style={{ backgroundColor: 'var(--bg-surface)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
@@ -294,6 +299,10 @@ export default function DentistDashboard({ onLogout }) {
             <input type="text" className="form-control" required value={taskFormData.title} onChange={e => setTaskFormData({...taskFormData, title: e.target.value})} placeholder="e.g. Call John for follow-up" />
           </div>
           <div className="form-group">
+            <label>Instructions / Description</label>
+            <textarea className="form-control" rows="3" value={taskFormData.description} onChange={e => setTaskFormData({...taskFormData, description: e.target.value})} placeholder="Add details or instructions for the assistant..."></textarea>
+          </div>
+          <div className="form-group">
             <label>Due Date</label>
             <input type="date" className="form-control" required value={taskFormData.dueDate} onChange={e => setTaskFormData({...taskFormData, dueDate: e.target.value})} />
           </div>
@@ -311,6 +320,10 @@ export default function DentistDashboard({ onLogout }) {
             <div className="form-group">
               <label>Task Title</label>
               <input type="text" className="form-control" required value={editTaskData.title} onChange={e => setEditTaskData({...editTaskData, title: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>Instructions / Description</label>
+              <textarea className="form-control" rows="3" value={editTaskData.description || ''} onChange={e => setEditTaskData({...editTaskData, description: e.target.value})}></textarea>
             </div>
             <div className="form-group">
               <label>Due Date</label>
