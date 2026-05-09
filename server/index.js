@@ -137,7 +137,7 @@ app.get('/api/reminders', async (req, res) => {
         reminders.push({
           id: `app-${app._id}`,
           type: 'Appointment',
-          title: `Appointment: ${app.patientName}`,
+          title: app.patientName,
           date: app.date,
           isOverdue: false
         });
