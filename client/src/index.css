@@ -562,3 +562,84 @@ tr:hover td {
   background-color: var(--danger);
   color: white;
 }
+
+/* Reminders Panel */
+.reminders-overlay {
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+.reminders-panel {
+  width: 100%;
+  max-width: 400px;
+  background-color: var(--bg-surface);
+  border-left: 1px solid var(--border-color);
+  height: 100vh;
+  animation: slideInRight 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.reminders-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.reminders-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+.reminders-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.reminders-close-btn:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+.reminders-body {
+  flex: 1;
+  overflow-y: auto;
+}
+.reminders-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.reminder-item {
+  display: flex;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  gap: 1rem;
+  align-items: flex-start;
+}
+.reminder-icon {
+  background-color: var(--bg-surface-hover);
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  display: flex;
+}
+.reminder-title {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+.reminder-meta {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}

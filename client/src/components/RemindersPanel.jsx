@@ -38,7 +38,7 @@ export default function RemindersPanel({ isOpen, onClose }) {
       <div className="reminders-panel" onClick={e => e.stopPropagation()}>
         <div className="reminders-header">
           <h3>Upcoming Reminders</h3>
-          <button className="btn" style={{ padding: '0.4rem' }} onClick={onClose}>
+          <button className="reminders-close-btn" onClick={onClose}>
             <X size={20} />
           </button>
         </div>
