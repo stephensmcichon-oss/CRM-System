@@ -1,15 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { LayoutDashboard, Users, Activity, Settings as SettingsIcon, ActivitySquare, LogOut } from 'lucide-react';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import Dashboard from './components/Dashboard';
 import ClientDatabase from './components/ClientDatabase';
 import HealthcareModule from './components/HealthcareModule';
 import Settings from './components/Settings';
 import Login from './components/Login';
-
-// Requires user to provide this key in Vercel env vars or config
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '123456789-placeholder.apps.googleusercontent.com';
 
 const Sidebar = ({ onLogout }) => {
   const location = useLocation();
@@ -59,7 +55,6 @@ const Sidebar = ({ onLogout }) => {
 };
 
 function App() {
-  // Check local storage for existing session
   const [isAuthenticated, setIsAuthenticated] = React.useState(!!localStorage.getItem('auth_token'));
 
   React.useEffect(() => {
@@ -78,29 +73,27 @@ function App() {
   };
 
   return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      <BrowserRouter>
-        {isAuthenticated ? (
-          <div className="app-container">
-            <Sidebar onLogout={handleLogout} />
-            <main className="main-content">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/clients" element={<ClientDatabase />} />
-                <Route path="/healthcare" element={<HealthcareModule />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
-            </main>
-          </div>
-        ) : (
-          <Routes>
-            <Route path="/login" element={<Login onLogin={handleLogin} />} />
-            <Route path="*" element={<Navigate to="/login" />} />
-          </Routes>
-        )}
-      </BrowserRouter>
-    </GoogleOAuthProvider>
+    <BrowserRouter>
+      {isAuthenticated ? (
+        <div className="app-container">
+          <Sidebar onLogout={handleLogout} />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/clients" element={<ClientDatabase />} />
+              <Route path="/healthcare" element={<HealthcareModule />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </main>
+        </div>
+      ) : (
+        <Routes>
+          <Route path="/login" element={<Login onLogin={handleLogin} />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      )}
+    </BrowserRouter>
   );
 }
 

@@ -4,10 +4,6 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const { OAuth2Client } = require('google-auth-library');
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '123456789-placeholder.apps.googleusercontent.com';
-const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
-
 app.use(cors());
 app.use(express.json());
 
@@ -67,19 +63,13 @@ let appointments = [
 // --- Routes ---
 
 // Authentication
-app.post('/api/auth/google', async (req, res) => {
-  const { token } = req.body;
-  try {
-    const ticket = await googleClient.verifyIdToken({
-      idToken: token,
-      audience: GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    // In a real app, generate a JWT. For mock, just return a fake token.
-    res.json({ success: true, sessionToken: `mock_session_${payload.email}` });
-  } catch (error) {
-    console.error('Google Auth Error:', error);
-    res.status(401).json({ success: false, message: 'Invalid Google Token' });
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  
+  if (username === 'user' && password === 'user') {
+    res.json({ success: true, sessionToken: `mock_session_token_${Date.now()}` });
+  } else {
+    res.status(401).json({ success: false, message: 'Invalid credentials' });
   }
 });
 
