@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, CheckCircle, Calendar, Plus } from 'lucide-react';
 import Modal from './Modal';
+import { API_BASE_URL } from '../config';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ totalClients: 0, activeTasks: 0, upcomingAppointments: 0 });
@@ -10,20 +11,20 @@ export default function Dashboard() {
   
   useEffect(() => {
     // Fetch stats
-    fetch('http://localhost:5000/api/stats')
+    fetch(`${API_BASE_URL}/api/stats`)
       .then(res => res.json())
       .then(data => setStats(data))
       .catch(err => console.error(err));
 
     // Fetch tasks
-    fetch('http://localhost:5000/api/tasks')
+    fetch(`${API_BASE_URL}/api/tasks`)
       .then(res => res.json())
       .then(data => setTasks(data))
       .catch(err => console.error(err));
   }, []);
 
   const completeTask = (id) => {
-    fetch(`http://localhost:5000/api/tasks/${id}/complete`, { method: 'POST' })
+    fetch(`${API_BASE_URL}/api/tasks/${id}/complete`, { method: 'POST' })
       .then(res => res.json())
       .then(updatedTask => {
         setTasks(tasks.map(t => t.id === id ? updatedTask : t));
@@ -34,7 +35,7 @@ export default function Dashboard() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetch('http://localhost:5000/api/tasks', {
+    fetch(`${API_BASE_URL}/api/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData)

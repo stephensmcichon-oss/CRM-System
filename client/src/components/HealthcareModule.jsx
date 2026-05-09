@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ActivitySquare, Calendar as CalendarIcon, Clock, Users, Plus, Eye, Trash2 } from 'lucide-react';
 import Modal from './Modal';
+import { API_BASE_URL } from '../config';
 
 export default function HealthcareModule() {
   const [patients, setPatients] = useState([]);
@@ -24,12 +25,12 @@ export default function HealthcareModule() {
   const [aptData, setAptData] = useState({ patientName: '', date: '', time: '', reason: '' });
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/patients')
+    fetch(`${API_BASE_URL}/api/patients`)
       .then(res => res.json())
       .then(data => setPatients(data))
       .catch(err => console.error(err));
 
-    fetch('http://localhost:5000/api/appointments')
+    fetch(`${API_BASE_URL}/api/appointments`)
       .then(res => res.json())
       .then(data => setAppointments(data))
       .catch(err => console.error(err));
@@ -40,7 +41,7 @@ export default function HealthcareModule() {
     const history = initialVisitData.service ? [{ id: Date.now(), ...initialVisitData }] : [];
     const payload = { ...patientData, dentalHistory: history };
 
-    fetch('http://localhost:5000/api/patients', {
+    fetch(`${API_BASE_URL}/api/patients`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -62,7 +63,7 @@ export default function HealthcareModule() {
 
   const handleUpdatePatient = (e) => {
     e.preventDefault();
-    fetch(`http://localhost:5000/api/patients/${viewingPatient.id}`, {
+    fetch(`${API_BASE_URL}/api/patients/${viewingPatient.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(viewingPatient)
@@ -93,7 +94,7 @@ export default function HealthcareModule() {
 
   const handleScheduleApt = (e) => {
     e.preventDefault();
-    fetch('http://localhost:5000/api/appointments', {
+    fetch(`${API_BASE_URL}/api/appointments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(aptData)

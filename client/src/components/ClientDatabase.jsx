@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MoreHorizontal, Plus, Search, Download, Edit2, Trash2 } from 'lucide-react';
 import Modal from './Modal';
+import { API_BASE_URL } from '../config';
 
 export default function ClientDatabase() {
   const [clients, setClients] = useState([]);
@@ -11,7 +12,7 @@ export default function ClientDatabase() {
   const [editFormData, setEditFormData] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/clients')
+    fetch(`${API_BASE_URL}/api/clients`)
       .then(res => res.json())
       .then(data => setClients(data))
       .catch(err => console.error(err));
@@ -23,7 +24,7 @@ export default function ClientDatabase() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetch('http://localhost:5000/api/clients', {
+    fetch(`${API_BASE_URL}/api/clients`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData)
@@ -62,7 +63,7 @@ export default function ClientDatabase() {
   };
 
   const handleDelete = (id) => {
-    fetch(`http://localhost:5000/api/clients/${id}`, { method: 'DELETE' })
+    fetch(`${API_BASE_URL}/api/clients/${id}`, { method: 'DELETE' })
       .then(() => {
         setClients(clients.filter(c => c.id !== id));
         setActiveDropdownId(null);
@@ -72,7 +73,7 @@ export default function ClientDatabase() {
 
   const handleEditSubmit = (e) => {
     e.preventDefault();
-    fetch(`http://localhost:5000/api/clients/${editFormData.id}`, {
+    fetch(`${API_BASE_URL}/api/clients/${editFormData.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editFormData)
