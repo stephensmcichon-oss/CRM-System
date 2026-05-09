@@ -101,6 +101,84 @@ app.get('/api/logs', async (req, res) => {
   }
 });
 
+// Reminders
+app.get('/api/reminders', async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const threeDaysFromNow = new Date(today);
+    threeDaysFromNow.setDate(today.getDate() + 3);
+    
+    const reminders = [];
+
+    // 1. Tasks due soon (not completed)
+    const tasks = await Task.find({ completed: false });
+    tasks.forEach(task => {
+      if (!task.dueDate) return;
+      const dueDate = new Date(task.dueDate);
+      if (dueDate <= threeDaysFromNow) {
+        reminders.push({
+          id: `task-${task._id}`,
+          type: 'Task',
+          title: task.title,
+          date: task.dueDate,
+          isOverdue: dueDate < today
+        });
+      }
+    });
+
+    // 2. Appointments coming up
+    const appointments = await Appointment.find();
+    appointments.forEach(app => {
+      if (!app.date) return;
+      const appDate = new Date(app.date);
+      if (appDate >= today && appDate <= threeDaysFromNow) {
+        reminders.push({
+          id: `app-${app._id}`,
+          type: 'Appointment',
+          title: `Appointment: ${app.patientName}`,
+          date: app.date,
+          isOverdue: false
+        });
+      }
+    });
+
+    // 3. Patient Birthdays (within next 7 days ignoring year)
+    const patients = await Patient.find();
+    const sevenDaysFromNow = new Date(today);
+    sevenDaysFromNow.setDate(today.getDate() + 7);
+    
+    patients.forEach(patient => {
+      if (!patient.birthDate) return;
+      const birthDate = new Date(patient.birthDate);
+      // Set birthDate year to current year to compare
+      birthDate.setFullYear(today.getFullYear());
+      
+      // If birthday already passed this year, check next year
+      if (birthDate < today && birthDate.getTime() < today.getTime() - 86400000) {
+        birthDate.setFullYear(today.getFullYear() + 1);
+      }
+
+      if (birthDate >= today && birthDate <= sevenDaysFromNow) {
+        reminders.push({
+          id: `bday-${patient._id}`,
+          type: 'Birthday',
+          title: `${patient.name}'s Birthday`,
+          date: patient.birthDate,
+          isOverdue: false
+        });
+      }
+    });
+
+    // Sort by closest date
+    reminders.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    res.json(reminders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Dashboard Stats
 app.get('/api/stats', async (req, res) => {
   try {

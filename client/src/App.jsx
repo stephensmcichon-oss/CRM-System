@@ -1,13 +1,14 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Activity, Settings as SettingsIcon, ActivitySquare, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Activity, Settings as SettingsIcon, ActivitySquare, LogOut, Bell } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import ClientDatabase from './components/ClientDatabase';
 import HealthcareModule from './components/HealthcareModule';
 import Settings from './components/Settings';
 import Login from './components/Login';
+import RemindersPanel from './components/RemindersPanel';
 
-const Sidebar = ({ onLogout }) => {
+const Sidebar = ({ onLogout, onToggleReminders, reminderCount }) => {
   const location = useLocation();
   
   const navItems = [
@@ -41,6 +42,15 @@ const Sidebar = ({ onLogout }) => {
       </div>
       
       <div className="nav-menu">
+        <button onClick={onToggleReminders} className="nav-item" style={{ background: 'transparent', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer', position: 'relative', color: 'var(--text-primary)' }}>
+          <Bell size={20} />
+          Reminders
+          {reminderCount > 0 && (
+            <span className="badge danger" style={{ position: 'absolute', right: '1rem', padding: '0.2rem 0.5rem', borderRadius: '1rem' }}>
+              {reminderCount}
+            </span>
+          )}
+        </button>
         <Link to="/settings" className={`nav-item ${location.pathname === '/settings' ? 'active' : ''}`}>
           <SettingsIcon size={20} />
           Settings
@@ -56,11 +66,30 @@ const Sidebar = ({ onLogout }) => {
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(!!localStorage.getItem('auth_token'));
+  const [isRemindersOpen, setIsRemindersOpen] = React.useState(false);
+  const [reminderCount, setReminderCount] = React.useState(0);
 
   React.useEffect(() => {
     const savedTheme = localStorage.getItem('crm-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
   }, []);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      // Fetch initial reminder count
+      const fetchReminders = () => {
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/reminders`)
+          .then(res => res.json())
+          .then(data => setReminderCount(data.length))
+          .catch(console.error);
+      };
+      fetchReminders();
+      
+      // Poll every 5 minutes
+      const interval = setInterval(fetchReminders, 300000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
 
   const handleLogin = (token) => {
     localStorage.setItem('auth_token', token);
@@ -76,7 +105,8 @@ function App() {
     <BrowserRouter>
       {isAuthenticated ? (
         <div className="app-container">
-          <Sidebar onLogout={handleLogout} />
+          <Sidebar onLogout={handleLogout} onToggleReminders={() => setIsRemindersOpen(true)} reminderCount={reminderCount} />
+          <RemindersPanel isOpen={isRemindersOpen} onClose={() => setIsRemindersOpen(false)} />
           <main className="main-content">
             <Routes>
               <Route path="/" element={<Dashboard />} />
