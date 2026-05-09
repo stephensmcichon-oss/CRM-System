@@ -3,13 +3,15 @@ import { Users, CheckCircle, Calendar, MoreHorizontal, MessageSquarePlus } from 
 import Modal from './Modal';
 import { API_BASE_URL } from '../config';
 
-export default function Dashboard() {
+export default function Dashboard({ onLogout }) {
   const [stats, setStats] = useState({ totalClients: 0, activeTasks: 0, upcomingAppointments: 0 });
   const [tasks, setTasks] = useState([]);
   const [activeDropdownId, setActiveDropdownId] = useState(null);
   const [commentTask, setCommentTask] = useState(null);
   const [newComment, setNewComment] = useState('');
-  
+  const [isRemindersOpen, setIsRemindersOpen] = useState(false);
+  const [reminderCount, setReminderCount] = useState(0);
+
   useEffect(() => {
     // Fetch stats
     fetch(`${API_BASE_URL}/api/stats`)
@@ -22,6 +24,12 @@ export default function Dashboard() {
       .then(res => res.json())
       .then(data => setTasks(data))
       .catch(err => console.error(err));
+
+    // Fetch reminders
+    fetch(`${API_BASE_URL}/api/reminders`)
+      .then(res => res.json())
+      .then(data => setReminderCount(data.filter(r => r.type === 'Appointment').length))
+      .catch(err => {});
   }, []);
 
   const completeTask = (id) => {
@@ -29,7 +37,6 @@ export default function Dashboard() {
       .then(res => res.json())
       .then(updatedTask => {
         setTasks(tasks.map(t => t.id === id ? updatedTask : t));
-        // Update stats optimistically
         setStats(prev => ({ ...prev, activeTasks: prev.activeTasks - 1 }));
       });
   };
@@ -37,9 +44,7 @@ export default function Dashboard() {
   const handleAddCommentSubmit = (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-    
     const updatedComments = [...(commentTask.comments || []), newComment];
-    
     fetch(`${API_BASE_URL}/api/tasks/${commentTask.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -55,7 +60,9 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="animate-fade-in">
+    <div style={{ backgroundColor: 'var(--bg-base)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+
+
       <div className="page-header">
         <div>
           <h1 className="page-title">Clinic Assistant Dashboard</h1>

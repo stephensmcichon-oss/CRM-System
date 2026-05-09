@@ -337,14 +337,16 @@ tr:hover td {
   }
   
   .sidebar {
-    width: 100%;
-    height: auto;
+    width: 100vw;
+    max-width: 100vw;
+    height: 64px;
+    display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
-    padding: 0.5rem;
+    padding: 0 0.5rem;
     position: fixed;
-    top: auto; /* Override desktop top: 0 */
+    top: auto;
     bottom: 0;
     left: 0;
     right: 0;
@@ -353,6 +355,7 @@ tr:hover td {
     border-top: 1px solid var(--border-color);
     background-color: rgba(24, 27, 33, 0.95);
     backdrop-filter: blur(10px);
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
   }
 
   [data-theme='light'] .sidebar {
@@ -372,24 +375,46 @@ tr:hover td {
   }
   
   .nav-menu {
+    display: flex;
     flex-direction: row;
     justify-content: space-around;
+    align-items: center;
     gap: 0;
+    width: 100%;
+    height: 100%;
   }
   
   .nav-item {
+    display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.5rem;
-    font-size: 0.7rem;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+    min-width: 48px;
+    min-height: 48px;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    transition: background 0.2s;
   }
 
   /* Make sure logout button doesn't have 100% width on mobile */
   button.nav-item {
     width: auto !important;
     margin-top: 0 !important;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    min-width: 48px;
+    min-height: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
   }
 
   .main-content {

@@ -1,0 +1,14 @@
+/*
+  Fix Crisp chatbox position on mobile so it does not overlap the settings button in the bottom nav.
+  This targets the Crisp widget and moves it up above the nav bar on small screens.
+*/
+@media (max-width: 600px) {
+  .crisp-client .crisp-widget,
+  .crisp-client .crisp-1rjpbbg,
+  .cc-165wh.cc-lk42u.cc-13wro {
+    bottom: 90px !important;
+    right: 12px !important;
+    left: auto !important;
+    z-index: 9999 !important;
+  }
+}

@@ -9,7 +9,7 @@ import Login from './components/Login';
 import RemindersPanel from './components/RemindersPanel';
 import DentistDashboard from './components/DentistDashboard';
 
-const Sidebar = ({ onLogout, onToggleReminders, reminderCount }) => {
+const TopNavbar = ({ onLogout, onToggleReminders, reminderCount }) => {
   const location = useLocation();
   
   const navItems = [
@@ -19,49 +19,57 @@ const Sidebar = ({ onLogout, onToggleReminders, reminderCount }) => {
   ];
 
   return (
-    <div className="sidebar">
-      <div>
-        <div className="sidebar-logo">
-          <div className="icon">
+    <header style={{ 
+      backgroundColor: 'var(--bg-surface)', 
+      borderBottom: '1px solid var(--border-color)', 
+      padding: '1rem 2rem', 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'center',
+      position: 'sticky',
+      top: 0,
+      zIndex: 50
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 700, fontSize: '1.25rem' }}>
+          <div className="icon" style={{ color: 'var(--accent-primary)', background: 'var(--accent-primary-light)', padding: '0.5rem', borderRadius: 'var(--radius-md)', display: 'flex' }}>
             <Activity size={24} />
           </div>
-          Dental Management
+          Clinic Assistant
         </div>
         
-        <div className="nav-menu" style={{ marginTop: '2rem' }}>
+        <nav style={{ display: 'flex', gap: '0.5rem' }}>
           {navItems.map(item => (
             <Link 
               key={item.path} 
               to={item.path} 
               className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+              style={{ padding: '0.6rem 1rem' }}
             >
               {item.icon}
               {item.label}
             </Link>
           ))}
-        </div>
+        </nav>
       </div>
       
-      <div className="nav-menu">
-        <button onClick={onToggleReminders} className="nav-item" style={{ background: 'transparent', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer', position: 'relative', color: 'var(--text-primary)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <button onClick={onToggleReminders} className="btn" style={{ position: 'relative', padding: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-surface-hover)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}>
           <Bell size={20} />
-          Reminders
           {reminderCount > 0 && (
-            <span className="badge danger" style={{ position: 'absolute', right: '1rem', padding: '0.2rem 0.5rem', borderRadius: '1rem' }}>
+            <span style={{ position: 'absolute', top: '-6px', right: '-6px', backgroundColor: 'var(--danger)', color: 'white', fontSize: '0.7rem', fontWeight: 700, width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 2px var(--bg-surface)' }}>
               {reminderCount}
             </span>
           )}
         </button>
-        <Link to="/settings" className={`nav-item ${location.pathname === '/settings' ? 'active' : ''}`}>
+        <Link to="/settings" className="btn" style={{ padding: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-surface-hover)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}>
           <SettingsIcon size={20} />
-          Settings
         </Link>
-        <button onClick={onLogout} className="nav-item" style={{ background: 'transparent', border: 'none', width: '100%', textAlign: 'left', color: 'var(--danger)', marginTop: '0.5rem', cursor: 'pointer' }}>
+        <button onClick={onLogout} className="btn" style={{ padding: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-surface-hover)', borderRadius: 'var(--radius-md)', color: 'var(--danger)' }}>
           <LogOut size={20} />
-          Logout
         </button>
       </div>
-    </div>
+    </header>
   );
 };
 
@@ -109,8 +117,8 @@ function App() {
         auth.role === 'dentist' ? (
           <DentistDashboard onLogout={handleLogout} />
         ) : (
-          <div className="app-container">
-            <Sidebar onLogout={handleLogout} onToggleReminders={() => setIsRemindersOpen(true)} reminderCount={reminderCount} />
+          <div className="app-container" style={{ flexDirection: 'column' }}>
+            <TopNavbar onLogout={handleLogout} onToggleReminders={() => setIsRemindersOpen(true)} reminderCount={reminderCount} />
             <RemindersPanel isOpen={isRemindersOpen} onClose={() => setIsRemindersOpen(false)} />
             <main className="main-content">
               <Routes>
