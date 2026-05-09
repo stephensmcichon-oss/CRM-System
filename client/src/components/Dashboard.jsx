@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, CheckCircle, Calendar, Plus } from 'lucide-react';
+import { Users, CheckCircle, Calendar, Plus, MoreHorizontal, Edit2, Trash2 } from 'lucide-react';
 import Modal from './Modal';
 import { API_BASE_URL } from '../config';
 
@@ -8,6 +8,8 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ title: '', dueDate: '' });
+  const [activeDropdownId, setActiveDropdownId] = useState(null);
+  const [editFormData, setEditFormData] = useState(null);
   
   useEffect(() => {
     // Fetch stats
@@ -46,6 +48,34 @@ export default function Dashboard() {
       setStats(prev => ({ ...prev, activeTasks: prev.activeTasks + 1 }));
       setIsModalOpen(false);
       setFormData({ title: '', dueDate: '' });
+    })
+    .catch(err => console.error(err));
+  };
+
+  const handleDelete = (id) => {
+    fetch(`${API_BASE_URL}/api/tasks/${id}`, { method: 'DELETE' })
+      .then(() => {
+        const taskToDelete = tasks.find(t => t.id === id);
+        setTasks(tasks.filter(t => t.id !== id));
+        if (taskToDelete && !taskToDelete.completed) {
+          setStats(prev => ({ ...prev, activeTasks: prev.activeTasks - 1 }));
+        }
+        setActiveDropdownId(null);
+      })
+      .catch(err => console.error(err));
+  };
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    fetch(`${API_BASE_URL}/api/tasks/${editFormData.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: editFormData.title, dueDate: editFormData.dueDate })
+    })
+    .then(res => res.json())
+    .then(updatedTask => {
+      setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+      setEditFormData(null);
     })
     .catch(err => console.error(err));
   };
@@ -113,14 +143,45 @@ export default function Dashboard() {
                   </span>
                 </td>
                 <td>
-                  {!task.completed && (
+                  <div style={{ position: 'relative' }}>
                     <button 
-                      onClick={() => completeTask(task.id)}
                       className="btn" 
-                      style={{ padding: '0.4rem 0.8rem', backgroundColor: 'var(--bg-surface-hover)', color: 'var(--text-primary)' }}>
-                      Complete
+                      style={{ padding: '0.5rem', backgroundColor: activeDropdownId === task.id ? 'var(--bg-surface-hover)' : 'transparent', color: 'var(--text-muted)' }}
+                      onClick={() => setActiveDropdownId(activeDropdownId === task.id ? null : task.id)}
+                    >
+                      <MoreHorizontal size={20} />
                     </button>
-                  )}
+                    {activeDropdownId === task.id && (
+                      <div className="dropdown-menu">
+                        {!task.completed && (
+                          <button 
+                            className="dropdown-item" 
+                            onClick={() => {
+                              completeTask(task.id);
+                              setActiveDropdownId(null);
+                            }}
+                          >
+                            <CheckCircle size={16} /> Complete
+                          </button>
+                        )}
+                        <button 
+                          className="dropdown-item" 
+                          onClick={() => {
+                            setEditFormData(task);
+                            setActiveDropdownId(null);
+                          }}
+                        >
+                          <Edit2 size={16} /> Edit
+                        </button>
+                        <button 
+                          className="dropdown-item danger" 
+                          onClick={() => handleDelete(task.id)}
+                        >
+                          <Trash2 size={16} /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -148,6 +209,26 @@ export default function Dashboard() {
             <button type="submit" className="btn btn-primary">Save Task</button>
           </div>
         </form>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal isOpen={!!editFormData} onClose={() => setEditFormData(null)} title="Edit Task">
+        {editFormData && (
+          <form onSubmit={handleEditSubmit}>
+            <div className="form-group">
+              <label>Task Title</label>
+              <input type="text" className="form-control" required value={editFormData.title} onChange={e => setEditFormData({...editFormData, title: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>Due Date</label>
+              <input type="date" className="form-control" required value={editFormData.dueDate} onChange={e => setEditFormData({...editFormData, dueDate: e.target.value})} />
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn" onClick={() => setEditFormData(null)}>Cancel</button>
+              <button type="submit" className="btn btn-primary">Update Task</button>
+            </div>
+          </form>
+        )}
       </Modal>
     </div>
   );

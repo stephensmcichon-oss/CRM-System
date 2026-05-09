@@ -147,6 +147,22 @@ app.post('/api/tasks/:id/complete', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.put('/api/tasks/:id', async (req, res) => {
+  try {
+    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updatedTask);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.delete('/api/tasks/:id', async (req, res) => {
+  try {
+    await Task.findByIdAndDelete(req.params.id);
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Healthcare - Patients
 app.get('/api/patients', async (req, res) => {
