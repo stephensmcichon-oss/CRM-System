@@ -62,7 +62,7 @@ export default function DentistDashboard({ onLogout }) {
           <div className="icon" style={{ color: 'var(--accent-primary)', background: 'var(--accent-primary-light)', padding: '0.5rem', borderRadius: 'var(--radius-md)', display: 'flex' }}>
             <Activity size={24} />
           </div>
-          Dr. Dashboard
+          Dentist Dashboard
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
