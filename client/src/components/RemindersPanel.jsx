@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Calendar, CheckSquare, Gift, X } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 
-export default function RemindersPanel({ isOpen, onClose }) {
+export default function RemindersPanel({ isOpen, onClose, filterType }) {
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,6 +33,8 @@ export default function RemindersPanel({ isOpen, onClose }) {
     }
   };
 
+  const displayReminders = filterType ? reminders.filter(r => r.type === filterType) : reminders;
+
   return (
     <div className="reminders-overlay" onClick={onClose}>
       <div className="reminders-panel" onClick={e => e.stopPropagation()}>
@@ -46,15 +48,15 @@ export default function RemindersPanel({ isOpen, onClose }) {
         <div className="reminders-body">
           {loading ? (
             <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>
-          ) : reminders.length === 0 ? (
+          ) : displayReminders.length === 0 ? (
             <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
               <Bell size={32} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
               <p>You're all caught up!</p>
-              <p style={{ fontSize: '0.85rem' }}>No upcoming tasks, appointments, or birthdays.</p>
+              <p style={{ fontSize: '0.85rem' }}>No upcoming {filterType ? filterType.toLowerCase() + 's' : 'tasks, appointments, or birthdays'}.</p>
             </div>
           ) : (
             <ul className="reminders-list">
-              {reminders.map(rem => (
+              {displayReminders.map(rem => (
                 <li key={rem.id} className="reminder-item">
                   <div className="reminder-icon">
                     {getIcon(rem.type)}

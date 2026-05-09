@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Bell, LogOut, Calendar as CalendarIcon, Clock, Users, CheckSquare, Plus, MoreHorizontal, Edit2, Trash2, List, Search } from 'lucide-react';
+import { Activity, Bell, LogOut, Calendar as CalendarIcon, Clock, Users, CheckSquare, Plus, MoreHorizontal, Edit2, Trash2, List, Search, Eye } from 'lucide-react';
 import RemindersPanel from './RemindersPanel';
 import Modal from './Modal';
 import CalendarView from './CalendarView';
@@ -21,6 +21,7 @@ export default function DentistDashboard({ onLogout }) {
   
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
   const [patientSearch, setPatientSearch] = useState('');
+  const [viewingPatient, setViewingPatient] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -134,7 +135,7 @@ export default function DentistDashboard({ onLogout }) {
         </div>
       </header>
 
-      <RemindersPanel isOpen={isRemindersOpen} onClose={() => setIsRemindersOpen(false)} />
+      <RemindersPanel isOpen={isRemindersOpen} onClose={() => setIsRemindersOpen(false)} filterType="Appointment" />
 
       {/* Main Content Grid */}
       <main style={{ padding: '2rem', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem', alignContent: 'start' }}>
@@ -306,7 +307,9 @@ export default function DentistDashboard({ onLogout }) {
                 <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--bg-surface)', zIndex: 10 }}>
                   <tr>
                     <th style={{ padding: '0.75rem 1rem' }}>Name</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Phone</th>
                     <th style={{ padding: '0.75rem 1rem' }}>Last Visit</th>
+                    <th style={{ padding: '0.75rem 1rem' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -317,7 +320,13 @@ export default function DentistDashboard({ onLogout }) {
                     return (
                       <tr key={p.id}>
                         <td style={{ padding: '0.75rem 1rem', fontWeight: 500 }}>{p.name}</td>
+                        <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{p.phone}</td>
                         <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{lastVisit}</td>
+                        <td style={{ padding: '0.75rem 1rem' }}>
+                          <button className="btn" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', backgroundColor: 'var(--bg-surface-hover)', color: 'var(--text-primary)' }} onClick={() => setViewingPatient(p)}>
+                            <Eye size={14} style={{ marginRight: '0.2rem' }} /> View
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -372,6 +381,58 @@ export default function DentistDashboard({ onLogout }) {
               <button type="submit" className="btn btn-primary">Update Task</button>
             </div>
           </form>
+        )}
+      </Modal>
+
+      {/* View Patient Modal */}
+      <Modal isOpen={!!viewingPatient} onClose={() => setViewingPatient(null)} title={viewingPatient ? viewingPatient.name : 'Patient Details'}>
+        {viewingPatient && (
+          <div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h4 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>Demographics & Contact</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                <div><span style={{ color: 'var(--text-secondary)' }}>DOB:</span> {viewingPatient.birthDate}</div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Gender:</span> {viewingPatient.gender}</div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Phone:</span> {viewingPatient.phone}</div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Email:</span> {viewingPatient.email}</div>
+                <div style={{ gridColumn: 'span 2' }}><span style={{ color: 'var(--text-secondary)' }}>Address:</span> {viewingPatient.address}</div>
+                <div style={{ gridColumn: 'span 2' }}><span style={{ color: 'var(--text-secondary)' }}>Emergency:</span> <span className="badge warning">{viewingPatient.emergencyContact}</span></div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h4 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>Medical History</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Conditions:</span> <span className="badge primary">{viewingPatient.condition}</span></div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Allergies:</span> {viewingPatient.allergies}</div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Medications:</span> {viewingPatient.currentMeds}</div>
+                <div><span style={{ color: 'var(--text-secondary)' }}>Physician:</span> {viewingPatient.physicianContact}</div>
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>Dental History Log</h4>
+              {viewingPatient.dentalHistory && viewingPatient.dentalHistory.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {viewingPatient.dentalHistory.map((visit, index) => (
+                    <div key={index} style={{ backgroundColor: 'var(--bg-base)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent-primary)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <strong>{visit.service}</strong>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{visit.date}</span>
+                      </div>
+                      <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{visit.notes}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: 'var(--text-muted)' }}>No dental history recorded.</div>
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '1.5rem' }}>
+              <button type="button" className="btn btn-primary" onClick={() => setViewingPatient(null)}>Close</button>
+            </div>
+          </div>
         )}
       </Modal>
 
