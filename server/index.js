@@ -85,7 +85,8 @@ const AppointmentSchema = new mongoose.Schema({
   patientName: String,
   date: String,
   time: String,
-  reason: String
+  reason: String,
+  status: { type: String, default: 'Scheduled' }
 }, schemaOptions);
 const Appointment = mongoose.model('Appointment', AppointmentSchema);
 
@@ -328,9 +329,32 @@ app.get('/api/appointments', async (req, res) => {
 });
 app.post('/api/appointments', async (req, res) => {
   try {
-    const newAppointment = await Appointment.create(req.body);
+    const newAppointment = await Appointment.create({ ...req.body, status: 'Scheduled' });
     await logActivity('CREATE', 'Appointment', `Scheduled appointment for ${newAppointment.patientName} on ${newAppointment.date}`);
     res.status(201).json(newAppointment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.put('/api/appointments/:id', async (req, res) => {
+  try {
+    const updatedAppointment = await Appointment.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (updatedAppointment) {
+      await logActivity('UPDATE', 'Appointment', `Updated appointment for ${updatedAppointment.patientName} to status: ${updatedAppointment.status}`);
+    }
+    res.json(updatedAppointment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.delete('/api/appointments/:id', async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id);
+    if (appointment) {
+      await logActivity('DELETE', 'Appointment', `Deleted appointment for ${appointment.patientName}`);
+      await Appointment.findByIdAndDelete(req.params.id);
+    }
+    res.status(204).send();
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

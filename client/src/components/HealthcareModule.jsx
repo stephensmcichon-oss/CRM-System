@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ActivitySquare, Calendar as CalendarIcon, Clock, Users, Plus, Eye, Trash2 } from 'lucide-react';
+import { ActivitySquare, Calendar as CalendarIcon, Clock, Users, Plus, Eye, Trash2, MoreHorizontal, Edit2, XCircle, UserX } from 'lucide-react';
 import Modal from './Modal';
 import { API_BASE_URL } from '../config';
 
@@ -22,7 +22,10 @@ export default function HealthcareModule() {
   const [initialVisitData, setInitialVisitData] = useState({ date: new Date().toISOString().split('T')[0], service: '', notes: '' });
   
   const [isAptModalOpen, setIsAptModalOpen] = useState(false);
-  const [aptData, setAptData] = useState({ patientName: '', date: '', time: '', reason: '' });
+  const [aptData, setAptData] = useState({ patientName: '', date: '', time: '', reason: '', status: 'Scheduled' });
+
+  const [activeAptDropdownId, setActiveAptDropdownId] = useState(null);
+  const [editAptData, setEditAptData] = useState(null);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/patients`)
@@ -97,13 +100,51 @@ export default function HealthcareModule() {
     fetch(`${API_BASE_URL}/api/appointments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(aptData)
+      body: JSON.stringify({ ...aptData, status: 'Scheduled' })
     })
     .then(res => res.json())
     .then(newApt => {
       setAppointments([...appointments, newApt]);
       setIsAptModalOpen(false);
-      setAptData({ patientName: '', date: '', time: '', reason: '' });
+      setAptData({ patientName: '', date: '', time: '', reason: '', status: 'Scheduled' });
+    })
+    .catch(err => console.error(err));
+  };
+
+  const handleUpdateAppointmentStatus = (id, newStatus) => {
+    fetch(`${API_BASE_URL}/api/appointments/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
+    .then(res => res.json())
+    .then(updatedApt => {
+      setAppointments(appointments.map(a => a.id === id ? updatedApt : a));
+      setActiveAptDropdownId(null);
+    })
+    .catch(err => console.error(err));
+  };
+
+  const handleDeleteAppointment = (id) => {
+    fetch(`${API_BASE_URL}/api/appointments/${id}`, { method: 'DELETE' })
+      .then(() => {
+        setAppointments(appointments.filter(a => a.id !== id));
+        setActiveAptDropdownId(null);
+      })
+      .catch(err => console.error(err));
+  };
+
+  const handleEditAptSubmit = (e) => {
+    e.preventDefault();
+    fetch(`${API_BASE_URL}/api/appointments/${editAptData.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editAptData)
+    })
+    .then(res => res.json())
+    .then(updatedApt => {
+      setAppointments(appointments.map(a => a.id === updatedApt.id ? updatedApt : a));
+      setEditAptData(null);
     })
     .catch(err => console.error(err));
   };
@@ -134,12 +175,14 @@ export default function HealthcareModule() {
               <Clock size={20} className="text-primary" /> Upcoming Appointments
             </h2>
           </div>
-          <table>
+          <table style={{ minWidth: '500px' }}>
             <thead>
               <tr>
                 <th>Patient</th>
                 <th>Date & Time</th>
                 <th>Reason</th>
+                <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -153,8 +196,54 @@ export default function HealthcareModule() {
                     </div>
                   </td>
                   <td><span className="badge primary">{apt.reason}</span></td>
+                  <td>
+                    <span className={`badge ${!apt.status || apt.status === 'Scheduled' ? 'success' : apt.status === 'Canceled' ? 'neutral' : 'danger'}`}>
+                      {apt.status || 'Scheduled'}
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ position: 'relative' }}>
+                      <button 
+                        className="btn" 
+                        style={{ padding: '0.5rem', backgroundColor: activeAptDropdownId === apt.id ? 'var(--bg-surface-hover)' : 'transparent', color: 'var(--text-muted)' }}
+                        onClick={() => setActiveAptDropdownId(activeAptDropdownId === apt.id ? null : apt.id)}
+                      >
+                        <MoreHorizontal size={20} />
+                      </button>
+                      {activeAptDropdownId === apt.id && (
+                        <div className="dropdown-menu">
+                          <button className="dropdown-item" onClick={() => { setEditAptData(apt); setActiveAptDropdownId(null); }}>
+                            <Edit2 size={16} /> Edit
+                          </button>
+                          {apt.status !== 'Canceled' && (
+                            <button className="dropdown-item" onClick={() => handleUpdateAppointmentStatus(apt.id, 'Canceled')}>
+                              <XCircle size={16} /> Mark Canceled
+                            </button>
+                          )}
+                          {apt.status !== 'No Show' && (
+                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleUpdateAppointmentStatus(apt.id, 'No Show')}>
+                              <UserX size={16} /> Mark No-Show
+                            </button>
+                          )}
+                          {apt.status !== 'Scheduled' && (
+                            <button className="dropdown-item" style={{ color: 'var(--success)' }} onClick={() => handleUpdateAppointmentStatus(apt.id, 'Scheduled')}>
+                              <Clock size={16} /> Mark Scheduled
+                            </button>
+                          )}
+                          <button className="dropdown-item danger" onClick={() => handleDeleteAppointment(apt.id)}>
+                            <Trash2 size={16} /> Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
+              {appointments.length === 0 && (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No appointments scheduled.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -288,7 +377,6 @@ export default function HealthcareModule() {
 
       {/* View/Edit Details Modal */}
       <Modal isOpen={!!viewingPatient} onClose={() => { setViewingPatient(null); setIsEditingPatient(false); }} title={isEditingPatient ? "Edit Patient Details" : "Patient Details"}>
-        
         {/* Read-Only View */}
         {viewingPatient && !isEditingPatient && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontSize: '0.95rem' }}>
@@ -485,6 +573,35 @@ export default function HealthcareModule() {
           </div>
         </form>
       </Modal>
+
+      {/* Edit Appointment Modal */}
+      <Modal isOpen={!!editAptData} onClose={() => setEditAptData(null)} title="Edit Appointment">
+        {editAptData && (
+          <form onSubmit={handleEditAptSubmit}>
+            <div className="form-group">
+              <label>Patient Name</label>
+              <input type="text" className="form-control" required value={editAptData.patientName} onChange={e => setEditAptData({...editAptData, patientName: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>Date</label>
+              <input type="date" className="form-control" required value={editAptData.date} onChange={e => setEditAptData({...editAptData, date: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>Time</label>
+              <input type="time" className="form-control" required value={editAptData.time} onChange={e => setEditAptData({...editAptData, time: e.target.value})} />
+            </div>
+            <div className="form-group">
+              <label>Reason</label>
+              <input type="text" className="form-control" required value={editAptData.reason} onChange={e => setEditAptData({...editAptData, reason: e.target.value})} />
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn" onClick={() => setEditAptData(null)}>Cancel</button>
+              <button type="submit" className="btn btn-primary">Update Appointment</button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
     </div>
   );
 }
