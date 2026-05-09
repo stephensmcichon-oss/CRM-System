@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Bell, LogOut, Calendar as CalendarIcon, Clock, Users, CheckSquare, Plus, MoreHorizontal, Edit2, Trash2 } from 'lucide-react';
+import { Activity, Bell, LogOut, Calendar as CalendarIcon, Clock, Users, CheckSquare, Plus, MoreHorizontal, Edit2, Trash2, List } from 'lucide-react';
 import RemindersPanel from './RemindersPanel';
 import Modal from './Modal';
+import CalendarView from './CalendarView';
 import { API_BASE_URL } from '../config';
 
 export default function DentistDashboard({ onLogout }) {
@@ -13,11 +14,12 @@ export default function DentistDashboard({ onLogout }) {
   const [patients, setPatients] = useState([]);
   const [logs, setLogs] = useState([]);
 
-  // Task Management State
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskFormData, setTaskFormData] = useState({ title: '', description: '', dueDate: '' });
   const [editTaskData, setEditTaskData] = useState(null);
   const [activeTaskDropdownId, setActiveTaskDropdownId] = useState(null);
+  
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
 
   useEffect(() => {
     const fetchData = async () => {
@@ -137,29 +139,53 @@ export default function DentistDashboard({ onLogout }) {
       <main style={{ padding: '2rem', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem', alignContent: 'start' }}>
         
         {/* Appointments Widget */}
-        <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '500px' }}>
+        <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: viewMode === 'calendar' ? 'none' : '500px', gridColumn: viewMode === 'calendar' ? '1 / -1' : 'auto' }}>
           <div className="card-header" style={{ padding: '1.5rem', marginBottom: 0, borderBottom: '1px solid var(--border-color)', backgroundColor: 'rgba(0,0,0,0.1)' }}>
             <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', fontWeight: 600 }}>
               <Clock size={20} className="text-primary" /> Upcoming Appointments
             </span>
+            <div className="view-toggle">
+              <button 
+                type="button"
+                className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={() => setViewMode('list')}
+              >
+                <List size={16} /> List
+              </button>
+              <button 
+                type="button"
+                className={`view-toggle-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+                onClick={() => setViewMode('calendar')}
+              >
+                <CalendarIcon size={16} /> Calendar
+              </button>
+            </div>
           </div>
-          <div style={{ overflowY: 'auto', flex: 1, padding: '1rem' }}>
-            {appointments.length === 0 ? (
-              <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No upcoming appointments.</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {appointments.map(apt => (
-                  <div key={apt.id} style={{ backgroundColor: 'var(--bg-base)', padding: '1rem', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--accent-primary)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <strong style={{ fontSize: '1.05rem' }}>{apt.patientName}</strong>
-                      <span className="badge primary">{apt.time}</span>
+          
+          {viewMode === 'list' ? (
+            <div style={{ overflowY: 'auto', flex: 1, padding: '1rem' }}>
+              {appointments.length === 0 ? (
+                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No upcoming appointments.</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {appointments.map(apt => (
+                    <div key={apt.id} style={{ backgroundColor: 'var(--bg-base)', padding: '1rem', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--accent-primary)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <strong style={{ fontSize: '1.05rem' }}>{apt.patientName}</strong>
+                        <span className="badge primary">{apt.time}</span>
+                      </div>
+                      <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{apt.date} • {apt.reason}</div>
                     </div>
-                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{apt.date} • {apt.reason}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <CalendarView 
+              appointments={appointments} 
+              onEventClick={() => {}} 
+            />
+          )}
         </div>
 
         {/* Tasks Widget */}
