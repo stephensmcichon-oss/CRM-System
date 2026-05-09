@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ActivitySquare, Calendar as CalendarIcon, Clock, Users, Plus, Eye, Trash2, MoreHorizontal, Edit2, XCircle, UserX } from 'lucide-react';
+import { ActivitySquare, Calendar as CalendarIcon, Clock, Users, Plus, Eye, Trash2, MoreHorizontal, Edit2, XCircle, UserX, List } from 'lucide-react';
 import Modal from './Modal';
+import CalendarView from './CalendarView';
 import { API_BASE_URL } from '../config';
 
 export default function HealthcareModule() {
@@ -26,6 +27,8 @@ export default function HealthcareModule() {
 
   const [activeAptDropdownId, setActiveAptDropdownId] = useState(null);
   const [editAptData, setEditAptData] = useState(null);
+  
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/patients`)
@@ -169,17 +172,35 @@ export default function HealthcareModule() {
       <div className="card-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
         
         {/* Appointments Section */}
-        <div className="table-container">
+        <div className="table-container" style={{ gridColumn: viewMode === 'calendar' ? '1 / -1' : 'auto' }}>
           <div className="table-header">
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Clock size={20} className="text-primary" /> Upcoming Appointments
             </h2>
+            <div className="view-toggle">
+              <button 
+                type="button"
+                className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={() => setViewMode('list')}
+              >
+                <List size={16} /> List
+              </button>
+              <button 
+                type="button"
+                className={`view-toggle-btn ${viewMode === 'calendar' ? 'active' : ''}`}
+                onClick={() => setViewMode('calendar')}
+              >
+                <CalendarIcon size={16} /> Calendar
+              </button>
+            </div>
           </div>
-          <table style={{ minWidth: '500px' }}>
-            <thead>
-              <tr>
-                <th>Patient</th>
-                <th>Date & Time</th>
+          
+          {viewMode === 'list' ? (
+            <table style={{ minWidth: '500px' }}>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Date & Time</th>
                 <th>Reason</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -246,6 +267,14 @@ export default function HealthcareModule() {
               )}
             </tbody>
           </table>
+          ) : (
+            <CalendarView 
+              appointments={appointments} 
+              onEventClick={(apt) => {
+                setEditAptData(apt);
+              }} 
+            />
+          )}
         </div>
 
         {/* Patients Section */}
