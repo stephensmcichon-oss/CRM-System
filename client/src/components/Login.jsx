@@ -5,8 +5,12 @@ import { API_BASE_URL } from '../config';
 
 export default function Login({ onLogin }) {
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSuccess = (credentialResponse) => {
+    setError('');
+    setIsLoading(true);
+    
     fetch(`${API_BASE_URL}/api/auth/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -21,6 +25,7 @@ export default function Login({ onLogin }) {
     })
     .catch(err => {
       console.error(err);
+      setIsLoading(false);
       setError('Login failed. Please verify your credentials.');
     });
   };
@@ -36,12 +41,19 @@ export default function Login({ onLogin }) {
         
         {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: 'var(--radius-sm)' }}>{error}</div>}
 
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <GoogleLogin
-            onSuccess={handleSuccess}
-            onError={() => setError('Google Login was unsuccessful.')}
-            useOneTap
-          />
+        <div style={{ display: 'flex', justifyContent: 'center', minHeight: '40px' }}>
+          {isLoading ? (
+            <div style={{ color: 'var(--accent-primary)', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="spinner"></div> Authenticating... 
+              <br/><span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>(Backend waking up, please wait up to 50s)</span>
+            </div>
+          ) : (
+            <GoogleLogin
+              onSuccess={handleSuccess}
+              onError={() => setError('Google Login was unsuccessful.')}
+              useOneTap
+            />
+          )}
         </div>
         
         <p style={{ marginTop: '2rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
