@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ActivitySquare, Calendar as CalendarIcon, Clock, Users, Plus, Eye, Trash2, MoreHorizontal, Edit2, XCircle, UserX, List } from 'lucide-react';
+import { ActivitySquare, Calendar as CalendarIcon, Clock, Users, Plus, Eye, Trash2, MoreHorizontal, Edit2, XCircle, UserX, List, Search } from 'lucide-react';
 import Modal from './Modal';
 import CalendarView from './CalendarView';
 import { API_BASE_URL } from '../config';
@@ -29,6 +29,7 @@ export default function HealthcareModule() {
   const [editAptData, setEditAptData] = useState(null);
   
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
+  const [patientSearch, setPatientSearch] = useState('');
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/patients`)
@@ -279,10 +280,21 @@ export default function HealthcareModule() {
 
         {/* Patients Section */}
         <div className="table-container">
-          <div className="table-header">
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="table-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
               <Users size={20} className="text-success" /> Patient Directory
             </h2>
+            <div style={{ position: 'relative', width: '250px' }}>
+              <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input 
+                type="text" 
+                className="form-control" 
+                placeholder="Search patient name..." 
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
+                style={{ paddingLeft: '2rem', paddingRight: '1rem', paddingTop: '0.4rem', paddingBottom: '0.4rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)' }}
+              />
+            </div>
           </div>
           <table>
             <thead>
@@ -294,7 +306,7 @@ export default function HealthcareModule() {
               </tr>
             </thead>
             <tbody>
-              {patients.map(patient => {
+              {patients.filter(p => p.name.toLowerCase().includes(patientSearch.toLowerCase())).map(patient => {
                 const lastVisit = patient.dentalHistory && patient.dentalHistory.length > 0 
                   ? patient.dentalHistory[patient.dentalHistory.length - 1].date 
                   : 'No visits';
@@ -311,6 +323,11 @@ export default function HealthcareModule() {
                   </tr>
                 );
               })}
+              {patients.filter(p => p.name.toLowerCase().includes(patientSearch.toLowerCase())).length === 0 && (
+                <tr>
+                  <td colSpan="4" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No patients found matching your search.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

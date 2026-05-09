@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Bell, LogOut, Calendar as CalendarIcon, Clock, Users, CheckSquare, Plus, MoreHorizontal, Edit2, Trash2, List } from 'lucide-react';
+import { Activity, Bell, LogOut, Calendar as CalendarIcon, Clock, Users, CheckSquare, Plus, MoreHorizontal, Edit2, Trash2, List, Search } from 'lucide-react';
 import RemindersPanel from './RemindersPanel';
 import Modal from './Modal';
 import CalendarView from './CalendarView';
@@ -20,6 +20,7 @@ export default function DentistDashboard({ onLogout }) {
   const [activeTaskDropdownId, setActiveTaskDropdownId] = useState(null);
   
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
+  const [patientSearch, setPatientSearch] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -281,13 +282,24 @@ export default function DentistDashboard({ onLogout }) {
 
         {/* Patient Directory Widget */}
         <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '500px' }}>
-          <div className="card-header" style={{ padding: '1.5rem', marginBottom: 0, borderBottom: '1px solid var(--border-color)', backgroundColor: 'rgba(0,0,0,0.1)' }}>
-            <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+          <div className="card-header" style={{ padding: '1.5rem', marginBottom: 0, borderBottom: '1px solid var(--border-color)', backgroundColor: 'rgba(0,0,0,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', fontWeight: 600, margin: 0 }}>
               <Users size={20} className="text-success" /> Patient Directory
             </span>
+            <div style={{ position: 'relative', width: '180px' }}>
+              <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input 
+                type="text" 
+                className="form-control" 
+                placeholder="Search name..." 
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
+                style={{ paddingLeft: '1.8rem', paddingRight: '0.5rem', paddingTop: '0.3rem', paddingBottom: '0.3rem', fontSize: '0.8rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)' }}
+              />
+            </div>
           </div>
           <div style={{ overflowY: 'auto', flex: 1, padding: 0 }}>
-            {patients.length === 0 ? (
+            {patients.filter(p => p.name.toLowerCase().includes(patientSearch.toLowerCase())).length === 0 ? (
               <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>No patients found.</div>
             ) : (
               <table style={{ minWidth: '100%' }}>
@@ -298,7 +310,7 @@ export default function DentistDashboard({ onLogout }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {patients.map(p => {
+                  {patients.filter(p => p.name.toLowerCase().includes(patientSearch.toLowerCase())).map(p => {
                     const lastVisit = p.dentalHistory && p.dentalHistory.length > 0 
                       ? p.dentalHistory[p.dentalHistory.length - 1].date 
                       : 'N/A';
