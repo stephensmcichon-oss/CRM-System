@@ -27,6 +27,22 @@ const schemaOptions = {
 
 // --- Mongoose Models ---
 
+const ActivityLogSchema = new mongoose.Schema({
+  action: String,
+  entity: String,
+  details: String,
+  timestamp: { type: Date, default: Date.now }
+}, schemaOptions);
+const ActivityLog = mongoose.model('ActivityLog', ActivityLogSchema);
+
+const logActivity = async (action, entity, details) => {
+  try {
+    await ActivityLog.create({ action, entity, details });
+  } catch (err) {
+    console.error('Failed to log activity:', err);
+  }
+};
+
 const ClientSchema = new mongoose.Schema({
   name: String,
   email: String,
@@ -75,6 +91,16 @@ const Appointment = mongoose.model('Appointment', AppointmentSchema);
 
 // --- Routes ---
 
+// Logs
+app.get('/api/logs', async (req, res) => {
+  try {
+    const logs = await ActivityLog.find().sort({ timestamp: -1 }).limit(50);
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Dashboard Stats
 app.get('/api/stats', async (req, res) => {
   try {
@@ -100,6 +126,7 @@ app.get('/api/clients', async (req, res) => {
 app.post('/api/clients', async (req, res) => {
   try {
     const newClient = await Client.create(req.body);
+    await logActivity('CREATE', 'Client', `Added new client: ${newClient.name}`);
     res.status(201).json(newClient);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -108,6 +135,9 @@ app.post('/api/clients', async (req, res) => {
 app.put('/api/clients/:id', async (req, res) => {
   try {
     const updatedClient = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (updatedClient) {
+      await logActivity('UPDATE', 'Client', `Updated client details for: ${updatedClient.name}`);
+    }
     res.json(updatedClient);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -115,7 +145,11 @@ app.put('/api/clients/:id', async (req, res) => {
 });
 app.delete('/api/clients/:id', async (req, res) => {
   try {
-    await Client.findByIdAndDelete(req.params.id);
+    const client = await Client.findById(req.params.id);
+    if (client) {
+      await logActivity('DELETE', 'Client', `Deleted client: ${client.name}`);
+      await Client.findByIdAndDelete(req.params.id);
+    }
     res.status(204).send();
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -134,6 +168,7 @@ app.get('/api/tasks', async (req, res) => {
 app.post('/api/tasks', async (req, res) => {
   try {
     const newTask = await Task.create({ ...req.body, completed: false });
+    await logActivity('CREATE', 'Task', `Added new task: ${newTask.title}`);
     res.status(201).json(newTask);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -142,6 +177,9 @@ app.post('/api/tasks', async (req, res) => {
 app.post('/api/tasks/:id/complete', async (req, res) => {
   try {
     const task = await Task.findByIdAndUpdate(req.params.id, { completed: true }, { new: true });
+    if (task) {
+      await logActivity('UPDATE', 'Task', `Completed task: ${task.title}`);
+    }
     res.json(task);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -150,6 +188,9 @@ app.post('/api/tasks/:id/complete', async (req, res) => {
 app.put('/api/tasks/:id', async (req, res) => {
   try {
     const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (updatedTask) {
+      await logActivity('UPDATE', 'Task', `Edited task details: ${updatedTask.title}`);
+    }
     res.json(updatedTask);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -157,7 +198,11 @@ app.put('/api/tasks/:id', async (req, res) => {
 });
 app.delete('/api/tasks/:id', async (req, res) => {
   try {
-    await Task.findByIdAndDelete(req.params.id);
+    const task = await Task.findById(req.params.id);
+    if (task) {
+      await logActivity('DELETE', 'Task', `Deleted task: ${task.title}`);
+      await Task.findByIdAndDelete(req.params.id);
+    }
     res.status(204).send();
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -176,6 +221,7 @@ app.get('/api/patients', async (req, res) => {
 app.post('/api/patients', async (req, res) => {
   try {
     const newPatient = await Patient.create(req.body);
+    await logActivity('CREATE', 'Patient', `Added new patient record for: ${newPatient.name}`);
     res.status(201).json(newPatient);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -184,6 +230,9 @@ app.post('/api/patients', async (req, res) => {
 app.put('/api/patients/:id', async (req, res) => {
   try {
     const updatedPatient = await Patient.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (updatedPatient) {
+      await logActivity('UPDATE', 'Patient', `Updated medical/dental records for: ${updatedPatient.name}`);
+    }
     res.json(updatedPatient);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -202,6 +251,7 @@ app.get('/api/appointments', async (req, res) => {
 app.post('/api/appointments', async (req, res) => {
   try {
     const newAppointment = await Appointment.create(req.body);
+    await logActivity('CREATE', 'Appointment', `Scheduled appointment for ${newAppointment.patientName} on ${newAppointment.date}`);
     res.status(201).json(newAppointment);
   } catch (err) {
     res.status(500).json({ error: err.message });
