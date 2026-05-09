@@ -1,12 +1,17 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Activity, Settings as SettingsIcon, ActivitySquare } from 'lucide-react';
+import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { LayoutDashboard, Users, Activity, Settings as SettingsIcon, ActivitySquare, LogOut } from 'lucide-react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import Dashboard from './components/Dashboard';
 import ClientDatabase from './components/ClientDatabase';
 import HealthcareModule from './components/HealthcareModule';
 import Settings from './components/Settings';
+import Login from './components/Login';
 
-const Sidebar = () => {
+// Requires user to provide this key in Vercel env vars or config
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '123456789-placeholder.apps.googleusercontent.com';
+
+const Sidebar = ({ onLogout }) => {
   const location = useLocation();
   
   const navItems = [
@@ -22,7 +27,7 @@ const Sidebar = () => {
           <div className="icon">
             <Activity size={24} />
           </div>
-          NexusCRM
+          Dental Management
         </div>
         
         <div className="nav-menu" style={{ marginTop: '2rem' }}>
@@ -44,31 +49,58 @@ const Sidebar = () => {
           <SettingsIcon size={20} />
           Settings
         </Link>
+        <button onClick={onLogout} className="nav-item" style={{ background: 'transparent', border: 'none', width: '100%', textAlign: 'left', color: 'var(--danger)', marginTop: '0.5rem', cursor: 'pointer' }}>
+          <LogOut size={20} />
+          Logout
+        </button>
       </div>
     </div>
   );
 };
 
 function App() {
+  // Check local storage for existing session
+  const [isAuthenticated, setIsAuthenticated] = React.useState(!!localStorage.getItem('auth_token'));
+
   React.useEffect(() => {
     const savedTheme = localStorage.getItem('crm-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
   }, []);
 
+  const handleLogin = (token) => {
+    localStorage.setItem('auth_token', token);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    setIsAuthenticated(false);
+  };
+
   return (
-    <BrowserRouter>
-      <div className="app-container">
-        <Sidebar />
-        <main className="main-content">
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <BrowserRouter>
+        {isAuthenticated ? (
+          <div className="app-container">
+            <Sidebar onLogout={handleLogout} />
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/clients" element={<ClientDatabase />} />
+                <Route path="/healthcare" element={<HealthcareModule />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </main>
+          </div>
+        ) : (
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/clients" element={<ClientDatabase />} />
-            <Route path="/healthcare" element={<HealthcareModule />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/login" element={<Login onLogin={handleLogin} />} />
+            <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+        )}
+      </BrowserRouter>
+    </GoogleOAuthProvider>
   );
 }
 
