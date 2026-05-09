@@ -1,10 +1,9 @@
 import React from 'react';
-import { Activity } from 'lucide-react';
+import { Activity, UserPlus, Stethoscope } from 'lucide-react';
 
 export default function Login({ onLogin }) {
-  const handleBypass = () => {
-    // Immediately log the user in without checking the backend
-    onLogin('bypassed_token');
+  const handleLogin = (role) => {
+    onLogin({ token: 'bypassed_token', role });
   };
 
   return (
@@ -14,15 +13,27 @@ export default function Login({ onLogin }) {
           <Activity size={48} />
         </div>
         <h2 style={{ marginBottom: '0.5rem' }}>Dental Management</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '2.5rem' }}>Welcome to the NexusCRM Healthcare Module.</p>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '2.5rem' }}>Select your portal to continue.</p>
         
-        <button 
-          onClick={handleBypass} 
-          className="btn btn-primary" 
-          style={{ width: '100%', padding: '0.75rem', fontSize: '1rem', fontWeight: 'bold' }}
-        >
-          Use App
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <button 
+            onClick={() => handleLogin('assistant')} 
+            className="btn btn-primary" 
+            style={{ width: '100%', padding: '0.85rem', fontSize: '1rem', fontWeight: 'bold' }}
+          >
+            <UserPlus size={20} />
+            Clinic Assistant Login
+          </button>
+
+          <button 
+            onClick={() => handleLogin('dentist')} 
+            className="btn" 
+            style={{ width: '100%', padding: '0.85rem', fontSize: '1rem', fontWeight: 'bold', backgroundColor: 'var(--bg-surface-hover)', color: 'var(--text-primary)' }}
+          >
+            <Stethoscope size={20} />
+            Dentist Dashboard
+          </button>
+        </div>
       </div>
     </div>
   );

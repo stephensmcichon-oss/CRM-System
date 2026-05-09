@@ -7,6 +7,7 @@ import HealthcareModule from './components/HealthcareModule';
 import Settings from './components/Settings';
 import Login from './components/Login';
 import RemindersPanel from './components/RemindersPanel';
+import DentistDashboard from './components/DentistDashboard';
 
 const Sidebar = ({ onLogout, onToggleReminders, reminderCount }) => {
   const location = useLocation();
@@ -65,7 +66,11 @@ const Sidebar = ({ onLogout, onToggleReminders, reminderCount }) => {
 };
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = React.useState(!!localStorage.getItem('auth_token'));
+  const [auth, setAuth] = React.useState(() => {
+    const saved = localStorage.getItem('auth_data');
+    return saved ? JSON.parse(saved) : null;
+  });
+  
   const [isRemindersOpen, setIsRemindersOpen] = React.useState(false);
   const [reminderCount, setReminderCount] = React.useState(0);
 
@@ -75,8 +80,7 @@ function App() {
   }, []);
 
   React.useEffect(() => {
-    if (isAuthenticated) {
-      // Fetch initial reminder count
+    if (auth) {
       const fetchReminders = () => {
         fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/reminders`)
           .then(res => res.json())
@@ -84,39 +88,41 @@ function App() {
           .catch(console.error);
       };
       fetchReminders();
-      
-      // Poll every 5 minutes
       const interval = setInterval(fetchReminders, 300000);
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated]);
+  }, [auth]);
 
-  const handleLogin = (token) => {
-    localStorage.setItem('auth_token', token);
-    setIsAuthenticated(true);
+  const handleLogin = (data) => {
+    localStorage.setItem('auth_data', JSON.stringify(data));
+    setAuth(data);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    setIsAuthenticated(false);
+    localStorage.removeItem('auth_data');
+    setAuth(null);
   };
 
   return (
     <BrowserRouter>
-      {isAuthenticated ? (
-        <div className="app-container">
-          <Sidebar onLogout={handleLogout} onToggleReminders={() => setIsRemindersOpen(true)} reminderCount={reminderCount} />
-          <RemindersPanel isOpen={isRemindersOpen} onClose={() => setIsRemindersOpen(false)} />
-          <main className="main-content">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/clients" element={<ClientDatabase />} />
-              <Route path="/healthcare" element={<HealthcareModule />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </main>
-        </div>
+      {auth ? (
+        auth.role === 'dentist' ? (
+          <DentistDashboard onLogout={handleLogout} />
+        ) : (
+          <div className="app-container">
+            <Sidebar onLogout={handleLogout} onToggleReminders={() => setIsRemindersOpen(true)} reminderCount={reminderCount} />
+            <RemindersPanel isOpen={isRemindersOpen} onClose={() => setIsRemindersOpen(false)} />
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/clients" element={<ClientDatabase />} />
+                <Route path="/healthcare" element={<HealthcareModule />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </main>
+          </div>
+        )
       ) : (
         <Routes>
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
