@@ -54,7 +54,8 @@ const Client = mongoose.model('Client', ClientSchema);
 const TaskSchema = new mongoose.Schema({
   title: String,
   dueDate: String,
-  completed: { type: Boolean, default: false }
+  completed: { type: Boolean, default: false },
+  comments: { type: [String], default: [] }
 }, schemaOptions);
 const Task = mongoose.model('Task', TaskSchema);
 
