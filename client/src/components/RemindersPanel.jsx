@@ -62,7 +62,7 @@ export default function RemindersPanel({ isOpen, onClose }) {
                   <div className="reminder-content">
                     <div className="reminder-title" style={{ color: rem.isOverdue ? 'var(--danger)' : 'inherit', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                       {rem.title}
-                      <span className={`badge ${rem.type === 'Task' ? 'warning' : rem.type === 'Appointment' ? 'primary' : 'success'}`} style={{ fontSize: '0.65rem', padding: '0.15rem 0.5rem' }}>
+                      <span className={`badge ${rem.type === 'Task' ? 'warning' : rem.type === 'Appointment' ? 'primary' : 'success'}`} style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem', border: '1px solid currentColor', borderRadius: '6px', fontWeight: 600 }}>
                         {rem.type}
                       </span>
                       {rem.isOverdue && <span className="badge danger" style={{ fontSize: '0.65rem', padding: '0.15rem 0.5rem' }}>Overdue</span>}
