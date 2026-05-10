@@ -828,8 +828,8 @@ tr:hover td {
 /* Floating Action Button */
 .fab-add {
   position: fixed;
-  bottom: 2rem;
-  right: 6.5rem; /* Offset to stay clear of the chat widget */
+  bottom: 2.5rem;
+  left: 2.5rem; /* Moved to lower left */
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -859,7 +859,7 @@ tr:hover td {
 @media (max-width: 768px) {
   .fab-add {
     bottom: 5.5rem; /* Move up to avoid bottom nav on mobile */
-    right: 1.5rem;
+    left: 1.5rem;
     width: 50px;
     height: 50px;
   }
