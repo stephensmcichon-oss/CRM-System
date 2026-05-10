@@ -97,9 +97,6 @@ export default function ClientDatabase() {
           <button className="btn" style={{ backgroundColor: 'var(--bg-surface-hover)', color: 'var(--text-primary)' }} onClick={handleExportCSV}>
             <Download size={18} /> Export
           </button>
-          <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-            <Plus size={18} /> Add Client
-          </button>
         </div>
       </div>
 
@@ -266,6 +263,29 @@ export default function ClientDatabase() {
           </form>
         )}
       </Modal>
+
+      {/* Floating Action Button for Add Client */}
+      <button 
+        className="btn btn-primary" 
+        onClick={() => setIsModalOpen(true)}
+        style={{
+          position: 'fixed',
+          bottom: '2rem',
+          left: '2rem',
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: 'var(--shadow-lg)',
+          zIndex: 100,
+          padding: 0
+        }}
+        title="Add Client"
+      >
+        <Plus size={24} />
+      </button>
     </div>
   );
 }
