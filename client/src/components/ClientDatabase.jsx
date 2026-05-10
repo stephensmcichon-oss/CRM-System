@@ -266,25 +266,11 @@ export default function ClientDatabase() {
 
       {/* Floating Action Button for Add Client */}
       <button 
-        className="btn btn-primary" 
+        className="fab-add" 
         onClick={() => setIsModalOpen(true)}
-        style={{
-          position: 'fixed',
-          bottom: '2rem',
-          left: '2rem',
-          width: '56px',
-          height: '56px',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: 'var(--shadow-lg)',
-          zIndex: 100,
-          padding: 0
-        }}
-        title="Add Client"
+        title="Add New Client"
       >
-        <Plus size={24} />
+        <Plus size={28} />
       </button>
     </div>
   );
